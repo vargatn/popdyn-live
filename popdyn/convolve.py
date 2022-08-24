@@ -34,10 +34,36 @@ def triangle(dists, scale=50):
     return kernel
 
 
+sobel_filter_h = np.array([
+    [1, 0, -1],
+    [2, 0, -2],
+    [1, 0, -1]
+])
+sobel_filter_v = sobel_filter_h.T
+
+laplace = np.array([
+    [1, 1, 1],
+    [1, -8, 1],
+    [1, 1, 1],
+])
+
+def get_sobel_v(*args, **kwargs):
+    return sobel_filter_v
+
+def get_sobel_h(*args, **kwargs):
+    return sobel_filter_h
+
+def get_laplace(*args, **kwargs):
+    return laplace
+
+
 kernels = {
     "gauss": gaussian,
     "tophat": tophat,
     "triangle": triangle,
+    "sobel_v": get_sobel_v,
+    "sobel_h": get_sobel_h,
+    "laplace": get_laplace,
 }
 
 
@@ -54,7 +80,7 @@ def make_noise_map(scale, shape, which="gauss"):
     return tmp
 
 
-def convolve_map(canvas, scale, which="gauss", ):
+def convolve_map(canvas, scale=10, which="gauss", ):
     pad_width = scale * 3
     padded = np.pad(canvas, pad_width=scale * 3)
     half_extent = scale * 2
