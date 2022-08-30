@@ -1,5 +1,10 @@
 import numpy as np
 
+def shift_array(array, place):
+    new_arr = np.roll(array, place, axis=0)
+    new_arr[:place] = np.zeros((new_arr[:place].shape))
+    return new_arr
+
 
 def distance_kernel(half_extent=50):
     size = half_extent * 2 + 1
