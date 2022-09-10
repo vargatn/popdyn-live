@@ -1,0 +1,10 @@
+README.md
+setup.py
+popdyn/__init__.py
+popdyn/convolve.py
+popdyn/reader.py
+popdyn.egg-info/PKG-INFO
+popdyn.egg-info/SOURCES.txt
+popdyn.egg-info/dependency_links.txt
+popdyn.egg-info/requires.txt
+popdyn.egg-info/top_level.txt
