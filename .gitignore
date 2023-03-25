@@ -2,3 +2,5 @@
 */*.npz
 */*/*.npz
 */*/*.npy
+*/*/*.p
+*/*/.ipynb_checkpoints
