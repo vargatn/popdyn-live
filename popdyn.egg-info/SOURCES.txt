@@ -2,6 +2,7 @@ README.md
 setup.py
 popdyn/__init__.py
 popdyn/convolve.py
+popdyn/flow.py
 popdyn/reader.py
 popdyn.egg-info/PKG-INFO
 popdyn.egg-info/SOURCES.txt
