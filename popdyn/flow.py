@@ -63,73 +63,65 @@ def calc_unshifted(inmap):
 
 
 class CellSpace(object):
-    def __init__(self, initial_maps, rules):
+    def __init__(self, initial_maps, layers, rules):
         """
-        Cell automata, considers the direct neighbor cells only
-
-        Initialize with a dict of initial maps in the style
-
-        initial_maps = {
-            "layer_name": initial map,
-        }
-
-        The rules are a similar dictionary of class instances which will be passed
-
-
+        Cell automata
         """
-        self.canvases = copy.deepcopy(initial_maps)
-        self.layers = list(initial_maps.keys())
-        self.padded_canvases = pad(self.canvases)
+        self.canvas = copy.deepcopy(initial_maps)
+        self.layers = layers
+        self.rules = rules
 
-        self.shape_canvas = self.canvases[self.layers[0]].shape
-        self.shape_canvas_padded = self.padded_canvases[self.layers[0]].shape
+        self.padded_canvas = flow.pad(self.canvas)
+        self.shape_canvas = self.canvas.shape
+        self.shape_canvas_padded = self.padded_canvas.shape
 
-        self.imap = np.arange(len(self.canvases[self.layers[0]].flatten())).reshape(self.shape_canvas)
-        self.imap_padded = np.arange(len(self.padded_canvases[self.layers[0]].flatten())).reshape(
-            self.shape_canvas_padded)
-        self.imap_center = center_cut(self.imap_padded)
-        self.imap_shifted = [center_cut(tmp) for tmp in calc_shifted(self.imap_padded)]
-        self.imap_unshifted = [
+        self._make_indexes()
+
+        self.shifted_canvases = self.shift()
+
+        self.reset_maps()
+
+    def _make_indexes(self):
+        ishape = self.shape_canvas[:2]  # only the map part of the stack
+        self.imap = np.arange(ishape[0] * ishape[1]).reshape(ishape)
+        ishape = self.shape_canvas_padded[:2]  # only the map part of the stack
+        self.imap_padded = np.arange(ishape[0] * ishape[1]).reshape(ishape)
+        self.imap_center = flow.center_cut(self.imap_padded)
+        self.imap_shifted = [flow.center_cut(tmp) for tmp in flow.calc_shifted(self.imap_padded)]
+        self.imap_unshifted = np.array([
             self.imap_shifted[1],
             self.imap_shifted[0],
             self.imap_shifted[3],
             self.imap_shifted[2],
-        ]
-
-        self.shifted_canvases = self.shift()
-        self.rules = rules
-
-        self.maps = {}
-        self.reset_maps()
-
-    def update_maps(self):
-        for key in self.layers:
-            self.maps[key].append(self.canvases[key].copy())
+        ])
 
     def reset_maps(self):
-        self.maps = {}
-        for key in self.layers:
-            #             dd = {key: [self.canvases[key],]}
-            dd = {key: []}
-            self.maps.update(dd)
+        self.maps = []
+
+    def update_maps(self):
+        self.maps.append(self.canvas)
 
     def shift(self):
-        shifted_canvases = {}
-        for key in self.canvases.keys():
-            arr = np.array([self.padded_canvases[key].flat[ii] for ii in self.imap_shifted])
-            shifted_canvases.update({key: arr})
-        return shifted_canvases
+        shifted_canvas = np.zeros(shape=((4,) + self.canvas.shape))
+        for i, ii in enumerate(self.imap_shifted):
+            for j in np.arange(self.canvas.shape[-1]):
+                shifted_canvas[i, :, :, j] = self.padded_canvas[:, :, j].flat[ii]
+
+        return shifted_canvas
 
     def step(self):
+        """
+        Apply the rules to the canvas (in order), the rules must return the residual change!!!!
 
-        new_canvases = {}
+        """
+
+        new_canvas = np.zeros(self.canvas.shape)
         for rule in self.rules:
-            canvas = rule.evolve(self)
-            new_canvases.update(canvas)
+            new_canvas += rule.evolve(self)
 
-        self.canvases = new_canvases
-        self.padded_canvases = pad(self.canvases)
-        self.shifted_canvases = self.shift()
+        self.canvas = new_canvas
+        self.padded_canvas = flow.pad(self.canvas)
+        self.shifted_canvas = self.shift()
 
     def flow(self, nstep=100, savestep=5):
         """
@@ -138,7 +130,6 @@ class CellSpace(object):
         self.reset_maps()
         self.update_maps()
         for i in np.arange(nstep):
-            #             print(str(i) + ' out of ' + str(nstep-1), end="\r")
             print(str(i) + ' out of ' + str(nstep - 1), end="\n")
             self.step()
             if i % savestep == 0:
