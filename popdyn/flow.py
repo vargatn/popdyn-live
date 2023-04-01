@@ -1,11 +1,16 @@
 import numpy as np
 
+def dpad(arr):
+    padded = np.pad(arr, pad_width=1, mode="edge")[:, :, 1:-1]
 def pad(arr):
     padded = np.pad(arr, pad_width=1, mode="edge")[:, :, 1:-1]
     return padded
 
-def center_cut(arr):
+def dcenter_cut(arr):
     return arr[1:-1, 1:-1, :]
+
+def center_cut(arr):
+    return arr[1:-1, 1:-1]
 
 def null_edges(arr, axis, depth=1, value=0):
     arr[:depth, :, axis] = value
